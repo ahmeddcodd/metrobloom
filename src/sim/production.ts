@@ -59,10 +59,11 @@ export function tickProduction(ctx: SimContext): void {
         // even if the player spent their starting coins elsewhere
         if (!rt.powered || !rt.watered) taxEff *= 0.5;
       }
-      b.taxProgress += (dt / ECONOMY.taxCycle) * taxEff;
-      if (b.taxProgress >= 1) {
-        b.taxProgress = 0;
-        b.coinsReady = Math.min(tax * 3, b.coinsReady + tax);
+      // income accrues continuously (not in one lump) so the collectable amount
+      // always reflects the exact time waited, up to a generous storage cap.
+      const cap = tax * 6;
+      if (b.coinsReady < cap) {
+        b.coinsReady = Math.min(cap, b.coinsReady + (tax / ECONOMY.taxCycle) * taxEff * dt);
       }
     }
 

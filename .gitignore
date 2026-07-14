@@ -5,6 +5,9 @@ node_modules/
 dist/
 *.local
 
+# packaged playable (regenerate with `npm run package`)
+metrobloom-playable.zip
+
 # vercel
 .vercel/
 

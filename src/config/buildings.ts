@@ -60,8 +60,10 @@ export const BUILDINGS: Record<BuildingCategory, BuildingDefinition> = {
     desc: 'Homes attract residents — your workers, customers and taxpayers.',
     permit: null,
     tiers: [
-      T({ tier: 1, name: 'Cottage', coinCost: 90, materialCost: 0, buildTime: 4, populationCapacity: 8, powerDemand: 2, waterDemand: 1, trafficDemand: 1, taxRate: 6 }),
-      T({ tier: 2, name: 'Townhouse', coinCost: 250, materialCost: 1, buildTime: 6, populationCapacity: 24, powerDemand: 5, waterDemand: 3, trafficDemand: 3, taxRate: 18, roadRequirement: 2 }),
+      T({ tier: 1, name: 'Cottage', coinCost: 90, materialCost: 0, buildTime: 4, populationCapacity: 8, powerDemand: 2, waterDemand: 1, trafficDemand: 1, taxRate: 8 }),
+      // Townhouse is the FIRST upgrade the player ever makes (L2) — it must be
+      // coins-only, because industry (the material source) isn't repaired until L3.
+      T({ tier: 2, name: 'Townhouse', coinCost: 200, materialCost: 0, buildTime: 6, populationCapacity: 24, powerDemand: 5, waterDemand: 3, trafficDemand: 3, taxRate: 18, roadRequirement: 2 }),
       T({ tier: 3, name: 'Apartment', coinCost: 750, materialCost: 4, buildTime: 9, populationCapacity: 60, powerDemand: 10, waterDemand: 7, trafficDemand: 8, taxRate: 50, roadRequirement: 2, happinessRequirement: 70 }),
     ],
   },

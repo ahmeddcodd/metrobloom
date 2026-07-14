@@ -48,7 +48,7 @@ export class UIManager {
   private uiT = 0;
   private lastPanelKey = '';
   private panelTargetKey = '';
-  private tutorialTarget: { x: number; z: number; text: string } | null = null;
+  private tutorialTarget: { x: number; z: number; y?: number; text: string } | null = null;
   private projV = new THREE.Vector3();
 
   constructor(
@@ -98,11 +98,12 @@ export class UIManager {
       </div>
       <div id="objectives"></div>
       <div id="toasts"></div>
+      <div id="tut-ring" style="display:none"></div>
       <div id="tut-hand" style="display:none">👆</div>
       <div id="tut-text" style="display:none"></div>
     `;
     this.root.appendChild(container);
-    for (const id of ['hud-level', 'hud-pop', 'hud-happy', 'hud-happy-ico', 'hud-happy-val', 'hud-coins', 'hud-mat', 'hud-settings', 'objectives', 'toasts', 'tut-hand', 'tut-text']) {
+    for (const id of ['hud-level', 'hud-pop', 'hud-happy', 'hud-happy-ico', 'hud-happy-val', 'hud-coins', 'hud-mat', 'hud-settings', 'objectives', 'toasts', 'tut-ring', 'tut-hand', 'tut-text']) {
       this.el.set(id, document.getElementById(id)!);
     }
     this.el.get('hud-happy')!.addEventListener('click', () => {
@@ -238,7 +239,10 @@ export class UIManager {
     if (tierDef.pollutionOutput) rows.push(['Pollution', `${tierDef.pollutionOutput}`]);
     if (tierDef.coverageRadius) rows.push(['Coverage radius', `${tierDef.coverageRadius}m`]);
     if (rt && b.defId !== 'park') rows.push(['Pollution exposure', `${Math.round(rt.exposure)}`]);
-    if (b.fireRisk > 5) rows.push(['Fire risk', `${Math.round(b.fireRisk)} / 100`]);
+    // only surface fire risk once the fire-safety system is part of the game,
+    // so early-game players aren't alarmed by a stat they can't act on yet
+    const fireRelevant = this.state.level >= 7 || this.state.permits.includes('fire');
+    if (fireRelevant && b.fireRisk > 5) rows.push(['Fire risk', `${Math.round(b.fireRisk)} / 100`]);
     if (rows.length) {
       html += `<div class="stat-grid">${rows.map(([k, v]) => `<div><span class="k">${k}: </span><b>${v}</b></div>`).join('')}</div>`;
     }
@@ -526,7 +530,7 @@ export class UIManager {
   }
 
   // ---------------- tutorial pointer ----------------
-  setTutorial(target: { x: number; z: number; text: string } | null): void {
+  setTutorial(target: { x: number; z: number; y?: number; text: string } | null): void {
     this.tutorialTarget = target;
   }
 
@@ -536,18 +540,33 @@ export class UIManager {
     if (!this.tutorialTarget) {
       hand.style.display = 'none';
       text.style.display = 'none';
+      this.el.get('tut-ring')!.style.display = 'none';
       return;
     }
-    this.projV.set(this.tutorialTarget.x, 1.5, this.tutorialTarget.z).project(this.camera);
+    // Project at the target's own height so the marker lands ON the object
+    // (roads sit ~0.2 above ground; buildings point at their base ~0.6).
+    const worldY = this.tutorialTarget.y ?? 0.6;
+    this.projV.set(this.tutorialTarget.x, worldY, this.tutorialTarget.z).project(this.camera);
     const sx = ((this.projV.x + 1) / 2) * w;
     const sy = ((1 - this.projV.y) / 2) * h;
+
+    // Pulsing ring marks the exact tap point (pixel-accurate, font-independent).
+    const ring = this.el.get('tut-ring')!;
+    ring.style.display = 'block';
+    ring.style.left = `${sx}px`;
+    ring.style.top = `${sy}px`;
+
+    // Hand gestures at the ring from the lower-right; its fingertip (anchored
+    // via transform-origin in CSS) rests just off the ring so it never covers it.
     hand.style.display = 'block';
-    hand.style.left = `${sx}px`;
-    hand.style.top = `${sy}px`;
+    hand.style.left = `${sx + 6}px`;
+    hand.style.top = `${sy + 6}px`;
+
     text.style.display = 'block';
     text.textContent = this.tutorialTarget.text;
-    text.style.left = `${clamp(sx - 90, 8, w - 240)}px`;
-    text.style.top = `${clamp(sy + 46, 8, h - 90)}px`;
+    // keep the caption below-right of the target, always fully on screen
+    text.style.left = `${clamp(sx + 26, 8, w - 236)}px`;
+    text.style.top = `${clamp(sy + 52, 8, h - 84)}px`;
   }
 
   // ---------------- per-frame ----------------

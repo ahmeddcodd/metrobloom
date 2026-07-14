@@ -55,7 +55,7 @@ export class Simulation {
       else if ((def.jobs ?? 0) > 0 && rt.workerFactor <= ECONOMY.minWorkerFactor) st.set(b.id, 'noworkers');
       else if (b.defId === 'commercial' && b.inventory <= 0) st.set(b.id, 'nogoods');
       else if (b.materialsReady >= 1) st.set(b.id, 'materials');
-      else if (b.coinsReady >= (def.taxRate ?? 8)) st.set(b.id, 'coins');
+      else if (b.coinsReady >= Math.max(4, (def.taxRate ?? 8) * 0.75)) st.set(b.id, 'coins');
     }
   }
 

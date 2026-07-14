@@ -38,3 +38,26 @@ for the best Playables result and is cheap to revisit.
     (`gameReady`, pause callbacks) stays valid.
 14. **Debug "Finale" button** exists behind `?debug=1` for QA of the ending;
     excluded from normal presentation.
+
+## Production-hardening pass (v1.1)
+
+15. **L2 was unwinnable** — it required a Townhouse upgrade costing 1 material,
+    but materials don't exist until industry is repaired in L3 (the reported
+    "cottage won't upgrade" bug). Fixed by making the first residential upgrade
+    coins-only; added a regression test asserting no level ≤3 requires materials.
+16. **Tutorial pointer accuracy** — the finger projected at world height y=1.5
+    (above the flat road), landing near the cottages. Now projects at each
+    target's own height (roads ~0.25, buildings ~0.6–0.8) and a pixel-accurate
+    pulsing ring marks the exact tap point, with the hand's fingertip anchored
+    via `transform-origin`. Added guidance for the collect-materials step, which
+    previously had none.
+17. **Income feel** — switched tax from per-cycle lumps to continuous accrual
+    (collectable amount = exact time waited), raised the storage cap to 6×, and
+    bumped cottage tax for snappier early game.
+18. **Traffic realism** — vehicles now keep to a right-hand lane (opposing
+    traffic auto-separates), instead of overlapping on the road centerline.
+19. **Fire-risk UI** — the fire-risk stat is hidden until the fire-service
+    system is introduced (L7 / permit), so early players aren't shown a number
+    they can't act on.
+20. **Playables packaging** — `npm run package` writes a spec-compliant zip with
+    forward-slash paths (not Windows `Compress-Archive` backslashes).

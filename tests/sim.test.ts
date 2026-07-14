@@ -6,6 +6,8 @@ import { RoadGraph } from '../src/sim/RoadGraph';
 import { evaluateLevel, evaluateObjective } from '../src/sim/objectives';
 import { Actions } from '../src/game/Actions';
 import { ECONOMY } from '../src/config/economy';
+import { BUILDINGS } from '../src/config/buildings';
+import { LEVELS } from '../src/config/levels';
 
 function runTicks(sim: Simulation, seconds: number): void {
   const n = Math.round(seconds * ECONOMY.simRate);
@@ -152,6 +154,30 @@ describe('actions', () => {
     const res = actions.upgradeRoad('e67');
     expect(res.ok).toBe(true);
     expect(state.roadTiers['e67']).toBe(2);
+  });
+});
+
+describe('campaign resource ordering (no upgrade needs a resource that does not exist yet)', () => {
+  it('the first residential upgrade (Townhouse) is coins-only — materials do not exist until L3', () => {
+    const townhouse = BUILDINGS.residential.tiers[1];
+    expect(townhouse.name).toBe('Townhouse');
+    expect(townhouse.materialCost).toBe(0);
+  });
+
+  it('every build/upgrade a level REQUIRES is achievable when that level is reached', () => {
+    // materials are first produced at L3; anything a level ≤3 asks to build/upgrade
+    // must cost 0 materials, or the level is unwinnable.
+    for (const level of LEVELS) {
+      for (const o of level.objectives) {
+        if (level.level > 3) continue;
+        if (o.kind === 'build') {
+          expect(BUILDINGS[o.category].tiers[0].materialCost, `L${level.level} build ${o.category}`).toBe(0);
+        }
+        if (o.kind === 'buildTier') {
+          expect(BUILDINGS[o.category].tiers[o.tier - 1].materialCost, `L${level.level} upgrade ${o.category} T${o.tier}`).toBe(0);
+        }
+      }
+    }
   });
 });
 

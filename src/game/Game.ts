@@ -233,7 +233,7 @@ export class Game {
   }
 
   // ---------------- tutorial focus ----------------
-  private tutorialFocusFor(level: number): { x: number; z: number; text: string } | null {
+  private tutorialFocusFor(level: number): { x: number; z: number; y?: number; text: string } | null {
     const def = levelDef(level);
     if (!def) return null;
     const progress = evaluateLevel(this.state, this.sim.derived);
@@ -242,31 +242,50 @@ export class Game {
     const o = open.def;
     if (o.kind === 'repair') {
       const p = plotById(o.plot);
-      return { x: p.x, z: p.z, text: o.hint };
+      return { x: p.x, z: p.z, y: 0.7, text: o.hint };
     }
     if (o.kind === 'roadTier' && o.edge) {
       const e = edgeById(o.edge);
       const a = nodeById(e.a);
       const b2 = nodeById(e.b);
-      return { x: (a.x + b2.x) / 2, z: (a.z + b2.z) / 2, text: o.hint };
+      return { x: (a.x + b2.x) / 2, z: (a.z + b2.z) / 2, y: 0.25, text: o.hint };
     }
     if (o.kind === 'build') {
-      // point at the first vacant plot that allows the category
-      for (const [pid] of Object.entries(this.state.buildings)) void pid;
+      // point at the first eligible vacant plot for this category
       const candidates = ['pshop1', 'pwater', 'ppark1', 'pfire', 'pstop1', 'pstop2', 'poffice', 'plandmark'];
       for (const pid of candidates) {
         const p = plotById(pid);
         if (!this.state.buildings[pid] && p.allowed.includes(o.category) && this.state.unlockedDistricts.includes(p.district)) {
-          return { x: p.x, z: p.z, text: o.hint };
+          return { x: p.x, z: p.z, y: 0.5, text: o.hint };
         }
+      }
+    }
+    if (o.kind === 'buildTier') {
+      // point at an existing building of this category that can be upgraded,
+      // preferring one whose road already meets the tier requirement
+      const upgradable = Object.values(this.state.buildings)
+        .filter((b) => b.defId === o.category && b.tier < o.tier && !b.construction && !b.damaged)
+        .sort((a, b) => (this.actions.upgradeBlockers(a.id).length - this.actions.upgradeBlockers(b.id).length));
+      if (upgradable.length) {
+        const p = plotById(upgradable[0].id);
+        return { x: p.x, z: p.z, y: 0.8, text: o.hint };
       }
     }
     if (o.kind === 'counter' && o.key === 'taxCollected') {
       for (const b of Object.values(this.state.buildings)) {
         if (b.coinsReady >= 1) {
           const p = plotById(b.id);
-          return { x: p.x, z: p.z, text: o.hint };
+          return { x: p.x, z: p.z, y: 0.7, text: o.hint };
         }
+      }
+    }
+    if (o.kind === 'counter' && o.key === 'materialsCollected') {
+      // point at whichever industry has materials ready to collect
+      const withMats = Object.values(this.state.buildings).find((b) => b.defId === 'industrial' && b.materialsReady >= 1);
+      const target = withMats ?? Object.values(this.state.buildings).find((b) => b.defId === 'industrial');
+      if (target) {
+        const p = plotById(target.id);
+        return { x: p.x, z: p.z, y: 0.7, text: o.hint };
       }
     }
     return null;

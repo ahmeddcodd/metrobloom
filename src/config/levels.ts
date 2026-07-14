@@ -48,18 +48,18 @@ export const LEVELS: LevelDef[] = [
       { kind: 'poweredHomes', count: 3, text: 'Restore power to 3 homes', hint: 'Homes power up automatically once the generator runs.' },
       { kind: 'counter', key: 'taxCollected', amount: 1, text: 'Collect your first taxes', hint: 'Tap a house showing a coin bubble.' },
     ],
-    reward: { coins: 150, text: 'Old Town celebrates! Residential upgrades are now approved.' },
+    reward: { coins: 180, text: 'Old Town celebrates! Residential upgrades are now approved.' },
   },
   {
     level: 2,
     title: 'A Place to Grow',
     intro: 'Families want to move in — but the main street is worn out and homes are too small.',
     objectives: [
-      { kind: 'roadTier', tier: 2, count: 1, edge: 'e67', text: 'Upgrade the worn main street', hint: 'Tap the cracked road west of the crossing.' },
-      { kind: 'buildTier', category: 'residential', tier: 2, count: 1, text: 'Upgrade a cottage into a Townhouse', hint: 'Tap a cottage → Upgrade. Townhouses need a Tier 2 road.' },
-      { kind: 'population', amount: 30, text: 'Reach 30 residents', hint: 'Powered, connected homes attract residents.' },
+      { kind: 'roadTier', tier: 2, count: 1, edge: 'e67', text: 'Upgrade the main street to Tier 2', hint: 'Tap the worn road below the houses, then Upgrade.' },
+      { kind: 'buildTier', category: 'residential', tier: 2, count: 1, text: 'Upgrade a cottage into a Townhouse', hint: 'Tap a cottage on the upgraded road → Upgrade (coins only).' },
+      { kind: 'population', amount: 30, text: 'Reach 30 residents', hint: 'Bigger, powered homes attract more residents over time.' },
     ],
-    reward: { coins: 140, text: 'A new construction plot opens in Old Town.' },
+    reward: { coins: 160, text: 'A new construction plot opens in Old Town.' },
   },
   {
     level: 3,
@@ -136,7 +136,7 @@ export const LEVELS: LevelDef[] = [
     objectives: [
       { kind: 'buildTier', category: 'residential', tier: 3, count: 1, text: 'Complete an Apartment building', hint: 'Apartments need Tier 2 roads and 70% happiness.' },
       { kind: 'build', category: 'office', count: 1, text: 'Build an office', hint: 'Offices offer clean jobs on the downtown plots.' },
-      { kind: 'population', amount: 150, text: 'Reach 150 residents', hint: 'Apartments hold 60 residents each.' },
+      { kind: 'population', amount: 110, text: 'Reach 110 residents', hint: 'Apartments hold 60 residents each — upgrade and build homes.' },
       { kind: 'happiness', amount: 70, text: 'Hold happiness at 70%+', hint: 'Density strains power, water and roads — plan ahead.' },
     ],
     reward: { coins: 300, materials: 2, permits: ['landmark'], text: 'Landmark permit granted. Build the city’s heart!' },
@@ -146,7 +146,7 @@ export const LEVELS: LevelDef[] = [
     title: 'The City’s Heart',
     intro: 'Prove MetroBloom is balanced — then raise the Eco Spire above the waterfront.',
     objectives: [
-      { kind: 'population', amount: 180, text: 'Reach 180 residents', hint: 'Keep homes desirable: services, clean air, jobs.' },
+      { kind: 'population', amount: 140, text: 'Reach 140 residents', hint: 'Keep homes desirable: services, clean air, jobs.' },
       { kind: 'happiness', amount: 75, text: 'Reach 75% happiness', hint: 'Check the breakdown for your weakest factor.' },
       { kind: 'powerReserve', amount: 10, text: 'Keep a +10 power reserve', hint: 'Upgrade the power plant beyond current demand.' },
       { kind: 'waterReserve', amount: 10, text: 'Keep a +10 water reserve', hint: 'Upgrade the water system beyond current demand.' },

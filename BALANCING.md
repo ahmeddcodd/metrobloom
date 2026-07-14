@@ -44,9 +44,23 @@ Warn at risk 60, ignite at 100 only after 20 s+ of warning; risk clamped to 55
 before L7. Burn 10 s uncovered (→ damaged, repair 60·tier coins) or ~7 s covered
 (no damage). Coverage drains risk at 1.2/s.
 
-## Recovery safeguards (tested in `tests/sim.test.ts`)
+## Recovery safeguards & winnability (tested in `tests/sim.test.ts`)
 
 - Start coins (120) always cover the generator repair (50).
 - Homes never fully empty while connected → taxes keep flowing.
 - Tier-2 road upgrade requires no materials (available pre-industry).
 - Fires cannot ignite without warning, or before L7.
+- **No level asks the player to build/upgrade something needing a resource that
+  does not exist yet** (regression-tested). In particular the first upgrade —
+  Cottage→Townhouse in L2 — is **coins-only (200c, 0 materials)**, because
+  industry (the material source) isn't repaired until L3. Cottage tax raised
+  6→8 so early income keeps pace.
+- Late-game population targets: L9 = 110, L10 = 140 (reachable with a mix of
+  townhouses + the L9 apartment, without maxing every plot).
+
+## Income model
+
+Building income accrues **continuously** (`taxRate/taxCycle × efficiency` per
+second), not in lumps, so the collectable amount always matches the exact time
+waited — up to a storage cap of `taxRate × 6`. Collecting banks the full stored
+amount. A coin bubble appears at `≥ max(4, taxRate × 0.75)`.

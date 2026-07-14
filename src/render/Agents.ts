@@ -17,6 +17,8 @@ import type { QualityLevel } from './Renderer';
 
 /** ground clearance per agent kind (roads are ~0.1–0.15 high) */
 const BASE_Y: Record<string, number> = { car: 0.14, bus: 0.14, firetruck: 0.14, citizen: 0.1 };
+/** right-lane offset (world units) so vehicles don't overlap on the centerline */
+const VEHICLE_LANE = 0.42;
 
 interface Traveler {
   obj: THREE.Group;
@@ -103,8 +105,16 @@ export class Agents {
     }
     if (t.kind === 'firetruck') speedFactor = Math.max(speedFactor, 0.85); // sirens clear a path
     t.segT += ((t.speed * speedFactor) * dt) / segLen;
-    const x = ax + (bx - ax) * Math.min(1, t.segT);
-    const z = az + (bz - az) * Math.min(1, t.segT);
+    let x = ax + (bx - ax) * Math.min(1, t.segT);
+    let z = az + (bz - az) * Math.min(1, t.segT);
+    // vehicles keep to the right lane: offset perpendicular-right of travel.
+    // Opposing traffic on the same segment naturally lands on the other side.
+    if (t.kind !== 'citizen') {
+      const rx = (bz - az) / segLen;
+      const rz = -(bx - ax) / segLen;
+      x += rx * VEHICLE_LANE;
+      z += rz * VEHICLE_LANE;
+    }
     t.obj.position.set(x, BASE_Y[t.kind] ?? 0.12, z);
     if (segLen > 0.4) t.obj.rotation.y = Math.atan2(bx - ax, bz - az) + Math.PI / 2;
     if (t.segT >= 1) {
@@ -242,8 +252,11 @@ export class Agents {
       const i = Math.min(d.seg, pts.length - 2);
       const [ax, az] = routePoint(pts[i]);
       const [bx, bz] = routePoint(pts[i + 1]);
-      m.position.set(ax + (bx - ax) * d.segT, BASE_Y.car, az + (bz - az) * d.segT);
-      if (Math.hypot(bx - ax, bz - az) > 0.4) m.rotation.y = Math.atan2(bx - ax, bz - az) + Math.PI / 2;
+      const segLen = Math.hypot(bx - ax, bz - az) || 1;
+      const rx = (bz - az) / segLen;
+      const rz = -(bx - ax) / segLen;
+      m.position.set(ax + (bx - ax) * d.segT + rx * VEHICLE_LANE, BASE_Y.car, az + (bz - az) * d.segT + rz * VEHICLE_LANE);
+      if (segLen > 0.4) m.rotation.y = Math.atan2(bx - ax, bz - az) + Math.PI / 2;
     }
     for (const [id, m] of this.truckMeshes) {
       if (!live.has(id)) {

@@ -21,6 +21,18 @@
 - [x] WebGL context-loss event handled (prevents default; page remains recoverable).
 - [x] Original IP: name, map, buildings, UI and audio are all original/procedural; reference images used as mood only.
 
+## Packaging the uploadable file
+
+```sh
+npm run package     # vite build → metrobloom-playable.zip
+```
+
+Produces `metrobloom-playable.zip` (~170 KB): `index.html` at the ZIP root,
+`assets/` alongside it, **forward-slash entry paths** (required — Windows
+`Compress-Archive` writes backslashes that break asset loading on the platform),
+relative `./assets/` references, SDK script before game code. Verified
+extractable and round-trip-clean.
+
 ## Verify against current platform docs before submission
 
 - [ ] Exact current SDK method names/typings (`ytgame.game.*`, `ytgame.system.*`) — wrapper isolates changes to `src/platform/playablesSdk.ts`.
