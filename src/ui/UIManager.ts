@@ -31,7 +31,7 @@ const STATUS_TEXT: Record<string, string> = {
   fire: 'ON FIRE! Fire crews respond if a station covers this area.',
   damaged: 'Damaged — needs repair before it can operate.',
   construction: 'Under construction…',
-  firerisk: 'High fire risk! Add fire coverage or reduce the load.',
+  firerisk: 'High fire risk! Extend fire-station coverage to this building.',
   noroad: 'No road access — this building is cut off.',
   nopower: 'No electricity. Connect to a powered road network with spare capacity.',
   nowater: 'No water supply. Build or upgrade water services.',
@@ -218,6 +218,9 @@ export class UIManager {
     if (b.construction) {
       const pct = Math.round((1 - b.construction.remaining / b.construction.total) * 100);
       html += `<div class="status">🏗️ Building… ${pct}%</div><div class="bar-mini"><div style="width:${pct}%"></div></div>`;
+    } else if (status === 'firerisk') {
+      // name the specific cause + the specific fix, never a vague message
+      html += `<div class="status">🔥 High fire risk. ${this.fireFix(b.defId, rt)}</div>`;
     } else if (status && STATUS_TEXT[status]) {
       const good = status === 'coins' || status === 'materials';
       html += `<div class="status${good ? ' ok' : ''}">${STATUS_TEXT[status]}</div>`;
@@ -313,6 +316,14 @@ export class UIManager {
     d.className = 'desc';
     d.innerHTML = `${gains.length ? `<span style="color:var(--mb-green)">Gains: ${gains.join(', ')}</span><br>` : ''}${costs.length ? `<span style="color:var(--mb-orange)">Adds: ${costs.join(', ')}</span>` : ''}`;
     panel.appendChild(d);
+  }
+
+  /** the exact cause + fix for a building's fire risk (only industry/power get it) */
+  private fireFix(defId: string, rt: { covered: boolean } | undefined): string {
+    if (!rt?.covered) return 'It has no fire coverage — build or upgrade a fire station within range.';
+    if (this.sim.derived.powerRatio < 1) return 'The power grid is overloaded — upgrade your power plant to ease the strain.';
+    if (defId === 'power') return 'Upgrade this ageing generator to a safer power plant.';
+    return 'Upgrade it to a cleaner tier to lower the risk.';
   }
 
   private fillBuildMenu(panel: HTMLElement, plotId: string): void {

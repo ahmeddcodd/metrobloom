@@ -202,6 +202,43 @@ describe('save migration', () => {
   });
 });
 
+describe('fire risk is logical and self-resolving', () => {
+  it('homes never accumulate fire risk (fire only affects industry & power)', () => {
+    const state = createInitialState();
+    state.level = 8; // fire system active (no pre-L7 clamp)
+    state.buildings['pgen'].damaged = false;
+    for (const b of Object.values(state.buildings)) if (b.defId === 'residential') b.occupancy = 8;
+    const sim = new Simulation(state);
+    for (let i = 0; i < 80 * ECONOMY.simRate; i++) sim.tick(Simulation.TICK);
+    expect(sim.derived.runtime.get('ph1')!.powered).toBe(true); // homes are live...
+    const homeRisk = Object.values(state.buildings)
+      .filter((b) => b.defId === 'residential')
+      .map((b) => b.fireRisk);
+    expect(Math.max(...homeRisk)).toBe(0); // ...yet carry zero fire risk
+  });
+
+  it('accumulated fire risk cools down once its cause is removed', () => {
+    const state = createInitialState();
+    state.level = 8;
+    // a home carrying stale risk (e.g. from an old save) must drain, not stick
+    state.buildings['ph1'].fireRisk = 50;
+    const sim = new Simulation(state);
+    for (let i = 0; i < 20 * ECONOMY.simRate; i++) sim.tick(Simulation.TICK);
+    expect(state.buildings['ph1'].fireRisk).toBeLessThan(50);
+  });
+
+  it('industry still builds fire risk and needs coverage', () => {
+    const state = createInitialState();
+    state.level = 8;
+    state.buildings['pgen'].damaged = false;
+    state.buildings['pwork'].damaged = false;
+    for (const b of Object.values(state.buildings)) if (b.defId === 'residential') b.occupancy = 8;
+    const sim = new Simulation(state);
+    for (let i = 0; i < 40 * ECONOMY.simRate; i++) sim.tick(Simulation.TICK);
+    expect(state.buildings['pwork'].fireRisk).toBeGreaterThan(10);
+  });
+});
+
 describe('fire safety fairness', () => {
   it('a fire never ignites without a warning phase', () => {
     const state = createInitialState();

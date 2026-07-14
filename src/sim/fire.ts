@@ -51,18 +51,24 @@ export function tickFire(ctx: SimContext): void {
       b.fireRisk = Math.max(0, b.fireRisk - dt * 4);
       continue;
     }
-    let rate = 0;
+    // Baseline cooldown: without an ACTIVE cause, risk always trends to zero.
+    // This is what makes "fix the cause" actually resolve the warning — homes
+    // and buildings whose risk source is removed cool down on their own.
+    let rate = -0.4;
+    // Fire risk only builds where it is physically plausible: industrial
+    // processes and aging power equipment. Homes/shops just brown out — they
+    // never catch fire from a citywide power shortage.
     if (b.defId === 'industrial') {
-      rate += 0.5 + b.tier * 0.4; // industrial activity
-      if (b.tier === 3) rate -= 0.6; // clean plant is safer
+      rate += b.tier === 3 ? 1.1 : 1.2 + b.tier * 0.4; // clean plant is much safer
     }
-    if (b.defId === 'power' && b.tier === 1) rate += 0.35; // old generator
-    if (derived.powerRatio < 1 && (BUILDINGS[b.defId].tiers[b.tier - 1].powerDemand ?? 0) > 0) {
-      rate += 0.5; // overloaded grid
+    if (b.defId === 'power' && b.tier === 1) rate += 0.7; // old generator runs hot
+    // an overloaded grid stresses electrical EQUIPMENT (industry/power), not homes
+    if (derived.powerRatio < 1 && (b.defId === 'industrial' || b.defId === 'power')) {
+      rate += 0.6;
     }
-    if (rt.covered) rate -= 1.2; // covered buildings drain risk
+    if (rt.covered) rate -= 2.2; // fire-station coverage strongly drains risk
     // scripted pressure: L7 introduces the system with a guaranteed warning
-    if (state.level === 7 && b.defId === 'industrial' && !rt.covered) rate += 1.6;
+    if (state.level === 7 && b.defId === 'industrial' && !rt.covered) rate += 1.4;
     b.fireRisk = Math.max(0, Math.min(ECONOMY.fireRiskIgnite, b.fireRisk + rate * dt));
     // before L7 the fire system isn't taught and no station can be built:
     // risk stays below the warning threshold — no punishment without a solution

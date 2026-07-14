@@ -39,11 +39,16 @@ traffic → roads & transit → pollution → parks & clean tech → density →
   of car demand when ≥2 connected stops exist.
 - **Pollution:** real sources only (industry, fossil power) with linear distance
   falloff (r=16) and park mitigation; shown per building as exposure.
-- **Fire:** risk grows from industrial activity, old generators and grid
-  overload; drains under station coverage. Warning bubble at 60, ignition at 100
-  only after ≥20 s of visible warning, and never before L7. Covered buildings are
-  saved by a dispatched truck; uncovered ones become damaged (repairable) — never
-  destroyed.
+- **Fire:** risk builds ONLY where it is physically plausible — industrial
+  processes and ageing (Tier-1) power plants; a grid overload adds risk to that
+  electrical equipment, never to homes or shops (those just brown out). A
+  constant baseline cooldown means risk always trends to zero once its cause is
+  removed, so "fix the cause" actually clears the warning. Coverage drains risk
+  fast. Warning bubble at 60, ignition at 100 only after ≥20 s of visible
+  warning, and never before L7. Covered buildings are saved by a dispatched
+  truck; uncovered ones become damaged (repairable) — never destroyed. The
+  building panel states the exact cause and fix (no coverage → build/extend a
+  station; overload → upgrade power; ageing plant → upgrade it).
 
 ## The ten levels
 

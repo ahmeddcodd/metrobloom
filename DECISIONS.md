@@ -61,3 +61,13 @@ for the best Playables result and is cheap to revisit.
     they can't act on.
 20. **Playables packaging** — `npm run package` writes a spec-compliant zip with
     forward-slash paths (not Windows `Compress-Archive` backslashes).
+21. **Fire model made logical & self-resolving (v1.2)** — reported issue: a
+    residential Cottage showed "high fire risk" because the old grid-overload
+    clause added risk to *every* powered building, and that risk then got
+    *stuck* (it only drained under fire coverage, so "reduce the load" never
+    cleared it). Redesigned: (a) fire risk builds only on industrial + power
+    buildings — homes/shops brown out but never ignite from a shortage; (b) a
+    constant baseline cooldown drains risk whenever its cause is gone, so fixing
+    the cause resolves the warning; (c) the panel now states the specific cause
+    and fix instead of a vague "reduce the load." Regression-tested (homes stay
+    at 0 risk, stale risk decays, industry still needs coverage).
