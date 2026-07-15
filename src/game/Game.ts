@@ -84,6 +84,7 @@ export class Game {
     // debug tools behind ?debug=1, never in normal presentation
     if (new URLSearchParams(location.search).get('debug') === '1') {
       this.ui.buildDebugPanel((act) => this.debugAction(act));
+      (window as unknown as { __mb: Game }).__mb = this; // manual driving for QA harnesses
     }
 
     // warm the sim so derived values exist before first paint

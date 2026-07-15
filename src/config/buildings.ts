@@ -134,9 +134,12 @@ export const BUILDINGS: Record<BuildingCategory, BuildingDefinition> = {
     desc: 'Covers nearby buildings, lowers fire risk and dispatches trucks to incidents.',
     permit: 'fire',
     tiers: [
-      T({ tier: 1, name: 'Fire Station', coinCost: 300, materialCost: 1, buildTime: 5, coverageRadius: 18, jobs: 6 }),
-      T({ tier: 2, name: 'District Fire Station', coinCost: 650, materialCost: 3, buildTime: 7, coverageRadius: 28, jobs: 12 }),
-      T({ tier: 3, name: 'Emergency Center', coinCost: 1200, materialCost: 5, buildTime: 9, coverageRadius: 44, jobs: 20 }),
+      // radii sized to the map: a T1 station covers the Old-Town workshop (~23u
+      // from the fire plot), so L7 is completable with a single build. Higher
+      // tiers reach the Industrial Edge (~37u) and then the whole city.
+      T({ tier: 1, name: 'Fire Station', coinCost: 300, materialCost: 1, buildTime: 5, coverageRadius: 26, jobs: 6 }),
+      T({ tier: 2, name: 'District Fire Station', coinCost: 650, materialCost: 3, buildTime: 7, coverageRadius: 40, jobs: 12 }),
+      T({ tier: 3, name: 'Emergency Center', coinCost: 1200, materialCost: 5, buildTime: 9, coverageRadius: 56, jobs: 20 }),
     ],
   },
   transit: {

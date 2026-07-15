@@ -71,3 +71,29 @@ for the best Playables result and is cheap to revisit.
     the cause resolves the warning; (c) the panel now states the specific cause
     and fix instead of a vague "reduce the load." Regression-tested (homes stay
     at 0 risk, stale risk decays, industry still needs coverage).
+
+## Full-playthrough review pass (v1.3)
+
+Played the whole L1→L10 campaign end-to-end (via a debug-exposed sim driver) and
+fixed three issues it surfaced:
+
+22. **Boot could hang on `requestAnimationFrame`.** The splash-paint await used a
+    double-rAF, which browsers suspend in hidden/backgrounded tabs — so boot (and
+    `gameReady()`) could stall indefinitely. Bounded it with a 250 ms timeout race
+    and wrapped boot in try/catch so a failure never leaves a stuck splash.
+23. **L7 fire station couldn't reach the workshop.** From the Market fire plot the
+    workshop is ~23 units away but the T1 radius was 18 — forcing a 650c+3m T2
+    upgrade just to introduce the system. Bumped fire radii to 26/40/56 so a
+    single T1 station covers Old Town (and higher tiers reach the Industrial Edge
+    and the whole city).
+24. **L10 pollution target wasn't sustainably reachable.** With dense apartments
+    beside the Old-Town workshop and no park plot nearby, even a Clean Plant left
+    pollution at ~39 vs the ≤30 target (it only passed via a transient dip while
+    the plant was under construction). Retuned the exposure normalization (×8→×6)
+    so a dirty industry reads ~35 (fails) and a Clean Plant reads ~29 (passes) —
+    making "clean up your industry" the real, achievable solution.
+
+Everything else played correctly: all 10 levels complete, systems stay causally
+linked (density → utility demand → upgrade power/water → population thrives),
+every building upgrades with changed mesh + stats, and the landmark + score
+screen fire.

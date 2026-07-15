@@ -21,7 +21,8 @@ All values live in `src/config/economy.ts`, `src/config/buildings.ts` and
 - **Power** capacity 20/55/120 (T3 renewable = 0 pollution) · cost 50c repair → 400c+2m → 900c+5m
 - **Water** capacity 30/70/140 · cost 220c+1m → 520c+3m → 1000c+5m
 - **Park** happiness +4/+8/+12 · mitigation radius 10/14/18
-- **Fire** coverage radius 18/28/44
+- **Fire** coverage radius 26/40/56 (T1 reaches the Old-Town workshop from the
+  Market fire plot; T2 reaches the Industrial Edge; T3 covers the whole city)
 - **Transit** car-trip reduction 12/18/25 % per stop (route max 50 %)
 - **Office** jobs 12/28/60 · tax 20/45/90
 - **Landmark** 3 phases: 500c+4m, 800c+6m, 1200c+8m

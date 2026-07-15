@@ -28,10 +28,30 @@ function buildSplash(): void {
   root.appendChild(div);
 }
 
+/** Wait for the splash to paint, but NEVER block boot: hidden/backgrounded tabs
+ *  suspend requestAnimationFrame, so race it against a short timeout. */
+function nextPaint(): Promise<void> {
+  return Promise.race([
+    new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    new Promise<void>((r) => setTimeout(r, 250)),
+  ]);
+}
+
 async function boot(): Promise<void> {
+  try {
+    await bootInner();
+  } catch (err) {
+    // a boot failure must never leave a blank/stuck splash — surface + recover
+    console.error('[metrobloom] boot failed', err);
+    const splash = document.getElementById('boot-splash');
+    if (splash) splash.remove();
+  }
+}
+
+async function bootInner(): Promise<void> {
   buildSplash();
-  // let the splash actually paint before signaling
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // let the splash actually paint before signaling (bounded — see nextPaint)
+  await nextPaint();
   await sdk.waitForSdk();
   sdk.firstFrameReady();
   splashProgress(0.3);

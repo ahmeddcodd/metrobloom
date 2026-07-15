@@ -52,7 +52,10 @@ export function tickEnvironment(ctx: SimContext): void {
       }
       exposure += s.p * falloff * mitigation;
     }
-    rt.exposure = exposure * 8; // normalize to ~0..100
+    // normalize to ~0..100. Tuned so a dirty Tier-1/2 industry near dense homes
+    // reads >30 (fails the L10 target) but a Clean Plant (pollutionOutput 5)
+    // brings it sustainably under 30 — making "clean up industry" the real fix.
+    rt.exposure = exposure * 6;
     if (b.defId === 'residential') {
       exposureSum += rt.exposure * Math.max(0.2, b.occupancy / 8);
       homes++;
