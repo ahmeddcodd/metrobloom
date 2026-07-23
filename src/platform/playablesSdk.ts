@@ -19,6 +19,9 @@ interface YtGame {
     onPause?: (cb: () => void) => void;
     onResume?: (cb: () => void) => void;
   };
+  engagement?: {
+    sendScore?: (data: { value: number }) => Promise<void> | void;
+  };
 }
 
 declare global {
@@ -127,6 +130,17 @@ class PlayablesSdk {
       window.ytgame?.system?.onAudioEnabledChange?.(cb);
     } catch {
       /* noop */
+    }
+  }
+
+  /** Submit the player's score (must be a non-negative integer). */
+  sendScore(value: number): void {
+    if (!this.available) return;
+    try {
+      const v = Math.max(0, Math.round(value)) | 0; // force a clean integer
+      window.ytgame?.engagement?.sendScore?.({ value: v });
+    } catch {
+      /* never crash on SDK errors */
     }
   }
 }

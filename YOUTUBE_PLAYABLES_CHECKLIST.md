@@ -21,6 +21,27 @@
 - [x] WebGL context-loss event handled (prevents default; page remains recoverable).
 - [x] Original IP: name, map, buildings, UI and audio are all original/procedural; reference images used as mood only.
 
+## IMPORTANT — certify the PRODUCTION build, not the dev server
+
+Run the certification checker against the **production preview** (or the uploaded
+zip), never `npm run dev`. The Vite dev server injects its own tooling
+(`/@vite/client`, `?t=`/`?v=` query strings) which loads before the SDK and
+contains unsupported filename characters (`@`, `?`) — that fails "SDK loaded
+before any game code" and "filenames must only contain supported characters".
+The production build has none of that.
+
+```sh
+npm run preview   # serves the real dist/ bundle at http://localhost:4174
+```
+
+Production build guarantees:
+- SDK is a **blocking (non-async) classic script** in `<head>`, so it executes
+  before the deferred game module — passes "SDK loaded before any game code".
+- Only `index.html`, `assets/index-*.js`, `assets/index-*.css` — all
+  `[A-Za-z0-9_.-]`.
+- `ytgame.engagement.sendScore({ value: <int> })` is called with the final best
+  score on completion (verified integer) — satisfies the score SHOULD.
+
 ## Packaging the uploadable file
 
 ```sh

@@ -8,8 +8,11 @@
     />
     <meta name="theme-color" content="#8ecf6b" />
     <title>MetroBloom</title>
-    <!-- YouTube Playables SDK must load before game code -->
-    <script src="https://www.youtube.com/game_api/v1" async></script>
+    <!-- YouTube Playables SDK MUST load before any game code. It is a classic
+         (blocking, non-async) script so it executes before the deferred module
+         bundle below — this is what the certification "SDK loaded before any
+         game code" check requires. -->
+    <script src="https://www.youtube.com/game_api/v1"></script>
   </head>
   <body>
     <div id="app">

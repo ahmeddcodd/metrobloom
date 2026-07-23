@@ -9,4 +9,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 900,
   },
   server: { port: 5174 },
+  // `npm run preview` serves the real production bundle (no dev tooling) — this
+  // is what should be run against the Playables certification checker.
+  preview: { port: 4174 },
 });
