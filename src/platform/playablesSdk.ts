@@ -95,8 +95,10 @@ class PlayablesSdk {
     return false;
   }
 
+  // Lifecycle/system callbacks are registered whenever the SDK provides them —
+  // NOT gated on IN_PLAYABLES_ENV — so the game strictly obeys YouTube's
+  // pause/resume/audio actions in every harness, not just the live frame.
   onPause(cb: () => void): void {
-    if (!this.available) return;
     try {
       window.ytgame?.system?.onPause?.(cb);
     } catch {
@@ -105,7 +107,6 @@ class PlayablesSdk {
   }
 
   onResume(cb: () => void): void {
-    if (!this.available) return;
     try {
       window.ytgame?.system?.onResume?.(cb);
     } catch {
@@ -114,7 +115,6 @@ class PlayablesSdk {
   }
 
   isAudioEnabled(): boolean {
-    if (!this.available) return true;
     try {
       const fn = window.ytgame?.system?.isAudioEnabled;
       if (fn) return fn.call(window.ytgame?.system);
@@ -125,7 +125,6 @@ class PlayablesSdk {
   }
 
   onAudioEnabledChange(cb: (enabled: boolean) => void): void {
-    if (!this.available) return;
     try {
       window.ytgame?.system?.onAudioEnabledChange?.(cb);
     } catch {

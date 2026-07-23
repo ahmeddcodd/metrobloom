@@ -3,6 +3,58 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ---------- pause overlay (YouTube pause = everything frozen) ---------- */
+#pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1000; /* above every panel, modal, banner and the debug tools */
+  background: rgba(10, 15, 26, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto; /* absorbs all clicks/taps so nothing below is usable */
+  cursor: default;
+}
+#pause-overlay .pause-card {
+  text-align: center;
+  color: #fff;
+}
+#pause-overlay .pause-bars {
+  display: inline-flex;
+  gap: 12px;
+}
+#pause-overlay .pause-bars span {
+  display: block;
+  width: 18px;
+  height: 52px;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+#pause-overlay .pause-label {
+  margin-top: 16px;
+  font-family: var(--mb-font);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+/* Freeze every running CSS animation while paused. The 3D scene and simulation
+   are already frozen by the game loop; this stops DOM motion (toasts, banners,
+   the tutorial pulse, panel entrances, etc.). */
+.mb-paused #ui-root * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+/* the whole game UI (everything except the overlay itself) is non-interactive
+   while paused — belt-and-suspenders on top of the overlay swallowing clicks */
+.mb-paused #ui-root > *:not(#pause-overlay) {
+  pointer-events: none !important;
+}
+.mb-paused #game-canvas {
+  pointer-events: none !important;
+}
 html,
 body {
   margin: 0;

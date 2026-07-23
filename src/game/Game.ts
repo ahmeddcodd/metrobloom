@@ -100,6 +100,7 @@ export class Game {
     window.addEventListener('pointerdown', unlockAudio);
 
     this.camera.onTap = (_wx, _wz, sx, sy) => {
+      if (this.paused) return; // no interaction while paused
       const ray = this.camera.raycaster(sx, sy);
       this.raycastTargets.length = 0;
       for (const o of this.city.pickables) this.raycastTargets.push(o);
@@ -127,6 +128,7 @@ export class Game {
 
     // keyboard pan/zoom for desktop accessibility
     window.addEventListener('keydown', (e) => {
+      if (this.paused) return; // no interaction while paused
       const step = 2.5;
       if (e.key === 'Escape') this.ui.select(null);
       const t = (this.camera as unknown as { desiredTarget: THREE.Vector2 }).desiredTarget;
@@ -195,6 +197,9 @@ export class Game {
   setPaused(p: boolean): void {
     if (p === this.paused) return; // idempotent — avoid redundant save/audio churn
     this.paused = p;
+    // Show/hide the full-screen pause overlay: blocks all input and freezes DOM
+    // animation so, together with the halted loop + audio, EVERYTHING is paused.
+    this.ui?.showPauseOverlay(p);
     if (p) {
       audio.pause();
       void saveSystem.saveNow(serialize(this.state));

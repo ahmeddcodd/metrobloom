@@ -454,6 +454,34 @@ export class UIManager {
     m.querySelector('#set-close')!.addEventListener('click', () => m.parentElement!.remove());
   }
 
+  /**
+   * Full-screen pause overlay. When YouTube pauses the game EVERYTHING must
+   * stop: the sim/render loop and audio are already halted by Game.setPaused;
+   * this overlay additionally (a) blocks every click/touch so no button or the
+   * canvas can be interacted with, and (b) freezes all running CSS animations
+   * (toasts, banners, pulses) via the `mb-paused` class.
+   */
+  showPauseOverlay(paused: boolean): void {
+    const root = document.documentElement;
+    let overlay = document.getElementById('pause-overlay');
+    if (paused) {
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'pause-overlay';
+        overlay.innerHTML = `<div class="pause-card"><div class="pause-bars"><span></span><span></span></div><div class="pause-label">Paused</div></div>`;
+        // swallow every pointer event so nothing underneath is interactive
+        for (const ev of ['pointerdown', 'pointerup', 'click', 'wheel', 'touchstart']) {
+          overlay.addEventListener(ev, (e) => { e.stopPropagation(); e.preventDefault(); }, { passive: false });
+        }
+        this.root.appendChild(overlay);
+      }
+      root.classList.add('mb-paused');
+    } else {
+      overlay?.remove();
+      root.classList.remove('mb-paused');
+    }
+  }
+
   private modal(html: string): HTMLElement {
     document.querySelector('.modal-backdrop')?.remove();
     const back = document.createElement('div');

@@ -8,6 +8,11 @@
 - [x] `loadData()` awaited before any `saveData()` (boot order in `main.ts`; `SaveSystem.loaded` guard).
 - [x] Saves versioned + migration-safe (unit-tested: null/garbage/partial/future blobs), debounced, ~2 KB (« 500 KiB soft limit).
 - [x] `onPause`/`onResume` pause the loop, sim, audio; a safety save fires on pause. `visibilitychange` fallback outside YouTube.
+- [x] On pause EVERYTHING freezes and is non-interactive: the loop/sim halt, audio
+      suspends, all DOM/CSS animation freezes (`mb-paused` class), and a full-screen
+      overlay + `pointer-events:none` on the game UI/canvas block every click/tap.
+      Pause/resume/audio callbacks register whenever the SDK provides them (not
+      gated on `IN_PLAYABLES_ENV`) so YouTube's actions are always obeyed.
 - [x] Audio: procedural WebAudio only, unlocked on first user gesture, gain follows `isAudioEnabled()` + `onAudioEnabledChange()`. No autoplay.
 - [x] All SDK calls guarded (`IN_PLAYABLES_ENV` check + try/catch) — local dev falls back to LocalStorage no-ops.
 - [x] Bundle: 1 HTML + 1 CSS + 1 JS ≈ 620 KB raw / 165 KB gzip (budget: <15 MiB initial). File count 3 (≤8000). Safe filenames. Relative paths (`base: './'`).
