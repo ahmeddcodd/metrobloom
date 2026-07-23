@@ -29,14 +29,18 @@ export class Terrain {
   private waterMat: THREE.ShaderMaterial;
   private boats: THREE.Group[] = [];
   private clouds: THREE.Sprite[] = [];
+  private ocean!: THREE.Mesh;
   private t = 0;
 
   constructor(scene: THREE.Scene) {
     const { minX, maxX, minZ, maxZ } = MAP_BOUNDS;
-    const d = maxZ - minZ + 24;
-    const cx = (maxX + SEA_X) / 2 + 5;
     const cz = (minZ + maxZ) / 2;
-    const gw = maxX - SEA_X + 10;
+    // Land extends well beyond the playable area (west edge = the coastline at
+    // SEA_X) so its far edges are never visible at any allowed zoom/pan — only
+    // the sea to the west reads as an edge, which is intentional.
+    const gw = 150; // grass width (east extent)
+    const d = 150; // grass depth (north/south extent)
+    const cx = SEA_X + gw / 2; // keep the west edge exactly on the coastline
 
     // ---- grass: painterly two-tone noise
     const rngTex = makeRng(99);
@@ -143,12 +147,12 @@ export class Terrain {
     sea.rotation.z = Math.PI; // uv.x=1 faces the shore
     sea.position.set(SEA_X - 14.4, -0.16, cz);
     this.group.add(sea);
-    // MetroBloom is an island: ocean surrounds the whole map so edges never
-    // show empty sky at any pan/zoom
-    const ocean = new THREE.Mesh(new THREE.PlaneGeometry(560, 560), mat(PALETTE.waterDeep));
-    ocean.rotation.x = -Math.PI / 2;
-    ocean.position.set(cx, -0.42, cz);
-    this.group.add(ocean);
+    // Deep ocean fills the western sea. It follows the camera each frame (see
+    // update) so its edge is never visible no matter how the player pans/zooms.
+    this.ocean = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(PALETTE.waterDeep));
+    this.ocean.rotation.x = -Math.PI / 2;
+    this.ocean.position.set(cx, -0.42, cz);
+    this.group.add(this.ocean);
 
     // ---- clouds: soft billboard sprites drifting over the bay
     const cloudCanvas = document.createElement('canvas');
@@ -203,9 +207,12 @@ export class Terrain {
     scene.add(this.group);
   }
 
-  update(dt: number): void {
+  update(dt: number, camX = 0, camZ = 0): void {
     this.t += dt;
     this.waterMat.uniforms.uTime.value = this.t;
+    // keep the deep ocean under the view so its edge is never revealed
+    this.ocean.position.x = camX;
+    this.ocean.position.z = camZ;
     for (let i = 0; i < this.boats.length; i++) {
       const b = this.boats[i];
       b.position.z += Math.sin(this.t * 0.2 + i * 2) * dt * 0.5;

@@ -97,3 +97,18 @@ Everything else played correctly: all 10 levels complete, systems stay causally
 linked (density → utility demand → upgrade power/water → population thrives),
 every building upgrades with changed mesh + stats, and the landmark + score
 screen fire.
+
+## Camera & surroundings polish (v1.4)
+
+25. **Zoom-out revealed the finite "floating island."** Max zoom was 30, far
+    enough to show the whole map edge + open ocean + background sky. Capped zoom
+    at 8–18 (default 15) so the view always stays framed on the city, and
+    tightened pan bounds to x[-26,14] z[-20,20] so the centre can't scroll into
+    empty countryside/sea. Bounds are now enforced in `update()` for every input
+    source (pointer, wheel, keyboard, cinematic).
+26. **Water/land edges looked unfinished.** Enlarged the land to 150×150 with its
+    west edge on the coastline (so its far edges are off-screen at any allowed
+    zoom — only the intended western sea reads as an edge), and made the deep
+    ocean plane follow the camera each frame so its edge is never revealed. The
+    result reads as a coastal town with countryside around it, not a diamond
+    floating in a void.

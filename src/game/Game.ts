@@ -384,7 +384,7 @@ export class Game {
       }
 
       this.camera.update(dt);
-      this.terrain.update(dt);
+      this.terrain.update(dt, this.camera.target.x, this.camera.target.y);
       this.city.update(dt);
       this.agents.update(dt, this.sim.time);
       this.effects.update(dt, this.sim.time);

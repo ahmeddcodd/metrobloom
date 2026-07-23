@@ -4,17 +4,25 @@
  * Also owns tap-vs-drag detection and raycast picking.
  */
 import * as THREE from 'three';
-import { MAP_BOUNDS } from '../config/map';
 import { clamp, damp, easeInOutQuad } from '../utils/math';
 
 const ISO_DIR = new THREE.Vector3(1, 1.05, 1).normalize(); // camera offset direction
 
+// Zoom = ortho half-height in world units. Capped so the player can't zoom out
+// far enough to reveal the island edges / open ocean (kept "within the map").
+const ZOOM_MIN = 8; // most zoomed IN
+const ZOOM_MAX = 18; // most zoomed OUT — frames the whole city, no floating-island view
+const ZOOM_DEFAULT = 15;
+// Pan bounds keep the view centred over the built city (all four districts),
+// never scrolling out into empty countryside or sea.
+const PAN = { minX: -26, maxX: 14, minZ: -20, maxZ: 20 };
+
 export class CameraController {
   readonly camera: THREE.OrthographicCamera;
   target = new THREE.Vector2(4, 2);
-  zoom = 16; // ortho half-height in world units
+  zoom = ZOOM_DEFAULT; // ortho half-height in world units
   private desiredTarget = new THREE.Vector2(4, 2);
-  private desiredZoom = 16;
+  private desiredZoom = ZOOM_DEFAULT;
   private aspect = 1;
 
   // input state
@@ -62,6 +70,11 @@ export class CameraController {
         c.resolve();
       }
     }
+    // enforce bounds for every input source (pointer, keyboard, cinematic)
+    this.desiredTarget.x = clamp(this.desiredTarget.x, PAN.minX, PAN.maxX);
+    this.desiredTarget.y = clamp(this.desiredTarget.y, PAN.minZ, PAN.maxZ);
+    this.desiredZoom = clamp(this.desiredZoom, ZOOM_MIN, ZOOM_MAX);
+
     const lambda = 8;
     this.target.x = damp(this.target.x, this.desiredTarget.x, lambda, dt);
     this.target.y = damp(this.target.y, this.desiredTarget.y, lambda, dt);
@@ -138,12 +151,12 @@ export class CameraController {
         // screen right = world (+x,-z)/√2 ; screen up = world (-x,-z)/√2 (foreshortened by tilt)
         const wx = (-dx / Math.SQRT2 - dy * 1.19) * upp;
         const wz = (dx / Math.SQRT2 - dy * 1.19) * upp;
-        this.desiredTarget.x = clamp(this.desiredTarget.x + wx, MAP_BOUNDS.minX, MAP_BOUNDS.maxX);
-        this.desiredTarget.y = clamp(this.desiredTarget.y + wz, MAP_BOUNDS.minZ, MAP_BOUNDS.maxZ);
+        this.desiredTarget.x = clamp(this.desiredTarget.x + wx, PAN.minX, PAN.maxX);
+        this.desiredTarget.y = clamp(this.desiredTarget.y + wz, PAN.minZ, PAN.maxZ);
       } else if (this.pointers.size === 2) {
         const d = this.pinchDist();
         if (this.lastPinch > 0) {
-          this.desiredZoom = clamp(this.desiredZoom * (this.lastPinch / d), 8, 30);
+          this.desiredZoom = clamp(this.desiredZoom * (this.lastPinch / d), ZOOM_MIN, ZOOM_MAX);
         }
         this.lastPinch = d;
       }
@@ -165,7 +178,7 @@ export class CameraController {
       (e) => {
         e.preventDefault();
         if (this.cinematic) return;
-        this.desiredZoom = clamp(this.desiredZoom * (e.deltaY > 0 ? 1.1 : 0.9), 8, 30);
+        this.desiredZoom = clamp(this.desiredZoom * (e.deltaY > 0 ? 1.1 : 0.9), ZOOM_MIN, ZOOM_MAX);
       },
       { passive: false },
     );
