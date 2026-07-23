@@ -112,3 +112,31 @@ screen fire.
     ocean plane follow the camera each frame so its edge is never revealed. The
     result reads as a coastal town with countryside around it, not a diamond
     floating in a void.
+
+## Polish & hardening pass (v1.5)
+
+27. **Window flicker (z-fighting).** Window boxes were 0.06 deep and placed so
+    their back face was coplanar with the wall (residential windows exactly so),
+    which fights in the depth buffer and flickers. Windows now use a 0.16-deep box
+    that STRADDLES the wall (back inside, front proud) — no coplanar faces, no
+    flicker — and the couple of coplanar decorative panels were fixed the same way.
+28. **Cottage door misplaced.** It overlapped a window. Rebuilt the cottage front
+    with a centred, grounded door flanked by two windows.
+29. **Big upgrades spilled onto the road.** Every building's footprint is now
+    auto-fit inside its plot (rotated bbox vs plot size, decorative trees excluded)
+    so an upgraded mesh grows in place and never crosses the road.
+30. **Pedestrians drifted/clipped.** Citizens used a per-point perpendicular
+    pre-offset that drifted across corners and toward buildings. They now walk the
+    SAME road path as vehicles with a consistent sidewalk offset applied at draw
+    time — no corner-cutting, no wall clipping. Vehicles keep the road lane. Agents
+    are also cleared on campaign reset so none keep driving a now-locked road.
+31. **Fire "didn't work".** Coverage drained risk so fast that fires only ignited
+    on UNCOVERED buildings, which then got damaged regardless — the dispatched
+    truck was purely cosmetic. Now any road-reachable fire station sends a crew that
+    actually SAVES the building; only a fire no crew can reach burns into damage.
+32. **Pause/resume conflict-proofing.** SDK `onPause`/`onResume` and tab
+    `visibilitychange` are tracked as independent pause reasons — paused while ANY
+    is active, resumes only when ALL clear — so they can never deadlock or fight.
+    Verified the SDK wrapper matches the live Playables SDK (v1.20260713) API.
+33. **Boot robustness.** Wrapped boot in try/catch and bounded the rAF wait so a
+    stuck first frame can never leave a blank splash (also surfaces any error).

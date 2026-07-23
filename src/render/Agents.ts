@@ -19,6 +19,8 @@ import type { QualityLevel } from './Renderer';
 const BASE_Y: Record<string, number> = { car: 0.14, bus: 0.14, firetruck: 0.14, citizen: 0.1 };
 /** right-lane offset (world units) so vehicles don't overlap on the centerline */
 const VEHICLE_LANE = 0.42;
+/** citizens walk further out, on the sidewalk beside the road */
+const CITIZEN_SIDEWALK = 1.05;
 
 interface Traveler {
   obj: THREE.Group;
@@ -57,6 +59,26 @@ export class Agents {
   applyQuality(q: QualityLevel): void {
     this.carCap = q === 'low' ? 6 : q === 'medium' ? 10 : ECONOMY.maxCars;
     this.citizenCap = q === 'low' ? 8 : q === 'medium' ? 16 : ECONOMY.maxCitizens;
+  }
+
+  /** Despawn everything — called on campaign reset so no vehicle keeps driving
+   *  a route that referenced a now-locked road. */
+  clear(): void {
+    for (const c of [...this.cars, ...this.citizens]) {
+      c.active = false;
+      c.obj.visible = false;
+    }
+    if (this.busT) {
+      this.busT.active = false;
+      this.busT.obj.visible = false;
+    }
+    if (this.fireTruck) {
+      this.fireTruck.active = false;
+      this.fireTruck.obj.visible = false;
+    }
+    this.fireTarget = null;
+    for (const [, m] of this.truckMeshes) this.group.remove(m);
+    this.truckMeshes.clear();
   }
 
   // ---------- helpers ----------
@@ -107,14 +129,14 @@ export class Agents {
     t.segT += ((t.speed * speedFactor) * dt) / segLen;
     let x = ax + (bx - ax) * Math.min(1, t.segT);
     let z = az + (bz - az) * Math.min(1, t.segT);
-    // vehicles keep to the right lane: offset perpendicular-right of travel.
-    // Opposing traffic on the same segment naturally lands on the other side.
-    if (t.kind !== 'citizen') {
-      const rx = (bz - az) / segLen;
-      const rz = -(bx - ax) / segLen;
-      x += rx * VEHICLE_LANE;
-      z += rz * VEHICLE_LANE;
-    }
+    // Everyone keeps to the right of travel — vehicles in the road lane,
+    // citizens further out on the sidewalk. Opposing traffic naturally lands on
+    // the other side, and there is no cross-corner drift.
+    const rx = (bz - az) / segLen;
+    const rz = -(bx - ax) / segLen;
+    const off = t.kind === 'citizen' ? CITIZEN_SIDEWALK : VEHICLE_LANE;
+    x += rx * off;
+    z += rz * off;
     t.obj.position.set(x, BASE_Y[t.kind] ?? 0.12, z);
     if (segLen > 0.4) t.obj.rotation.y = Math.atan2(bx - ax, bz - az) + Math.PI / 2;
     if (t.segT >= 1) {
@@ -168,28 +190,22 @@ export class Agents {
     if (from === to) return;
     const pts = this.makeRoute(from, to);
     if (!pts) return;
-    // walk on sidewalk offset
-    const off = 1.15;
-    const shifted = pts.map(([x, z], i): [number, number] => {
-      const [nx, nz] = pts[Math.min(i + 1, pts.length - 1)];
-      const dx = nx - x;
-      const dz = nz - z;
-      const len = Math.hypot(dx, dz) || 1;
-      return [x + (-dz / len) * off, z + (dx / len) * off];
-    });
+    // Citizens follow the SAME road path as vehicles; the sidewalk offset is
+    // applied per-segment at draw time (see advance) so they never drift across
+    // corners or clip through buildings.
     let t = this.citizens.find((c) => !c.active);
     if (!t) {
       if (this.citizens.length >= this.citizenCap) return;
-      t = { obj: buildCitizen(this.citizens.length), points: shifted, seg: 0, segT: 0, speed: ECONOMY.citizenSpeed, active: true, pauseT: 0, kind: 'citizen', loop: false };
+      t = { obj: buildCitizen(this.citizens.length), points: pts, seg: 0, segT: 0, speed: ECONOMY.citizenSpeed, active: true, pauseT: 0, kind: 'citizen', loop: false };
       this.group.add(t.obj);
       this.citizens.push(t);
     }
-    t.points = shifted;
+    t.points = pts;
     t.seg = 0;
     t.segT = 0;
     t.active = true;
     t.obj.visible = true;
-    t.obj.position.set(shifted[0][0], BASE_Y.citizen, shifted[0][1]);
+    t.obj.position.set(pts[0][0], BASE_Y.citizen, pts[0][1]);
   }
 
   // ---------- bus ----------

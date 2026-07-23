@@ -90,9 +90,14 @@ function gable(w: number, h: number, d: number, color: number, x = 0, y = 0, z =
   return m;
 }
 
-/** strip of glowing windows on a wall face */
+/**
+ * Strip of glowing windows on a wall face. The window box is deep enough (0.16)
+ * that it STRADDLES the wall surface — its back face sits inside the wall and its
+ * front protrudes — so no face is ever coplanar with the wall (which is what
+ * causes z-fighting / flicker). `z` is the wall's outward face position.
+ */
 function windows(parent: THREE.Group, w: number, rows: number, cols: number, y0: number, z: number, rowGap = 0.62, lit = true): void {
-  const g = geo('box', 0.34, 0.4, 0.06);
+  const g = geo('box', 0.34, 0.4, 0.16);
   const m = lit ? mat(PALETTE.glassEmissive, { emissive: PALETTE.glassEmissive, emissiveIntensity: 0.75 }) : mat(PALETTE.glass);
   const count = rows * cols;
   const inst = new THREE.InstancedMesh(g, m, count);
@@ -111,6 +116,7 @@ function windows(parent: THREE.Group, w: number, rows: number, cols: number, y0:
 
 function tree(x: number, z: number, s = 1): THREE.Group {
   const g = new THREE.Group();
+  g.name = 'decor'; // excluded from building footprint fitting (may overhang)
   g.add(cyl(0.12 * s, 0.5 * s, PALETTE.trunk, 0, 0, 0, 6));
   const crown = mesh(geo('sphere', 0.55), mat(Math.random() > 0.5 ? PALETTE.treeGreen : PALETTE.treeDark), 0, 0.85 * s, 0);
   crown.scale.setScalar(s);
@@ -127,8 +133,12 @@ function residential(tier: number): THREE.Group {
   if (tier === 1) {
     g.add(box(2.6, 1.5, 2.2, PALETTE.resWallA));
     g.add(gable(2.8, 1.0, 2.4, PALETTE.resRoofA, 0, 1.5));
-    g.add(box(0.5, 0.9, 0.08, PALETTE.trunk, 0.5, 0, 1.12));
-    windows(g, 2.2, 1, 2, 0.7, 1.13);
+    // road-facing (+z) wall front face is at 2.2/2 = 1.1. Centered door,
+    // grounded, with a glowing window on each side — all straddle the wall.
+    g.add(box(0.62, 0.95, 0.16, PALETTE.trunk, 0, 0, 1.1));
+    for (const wx of [-0.82, 0.82]) {
+      g.add(box(0.5, 0.44, 0.16, PALETTE.glassEmissive, wx, 0.62, 1.1, { emissive: PALETTE.glassEmissive, emissiveIntensity: 0.7 }));
+    }
     g.add(tree(-1.6, 0.8, 0.8));
   } else if (tier === 2) {
     g.add(box(3.4, 2.8, 2.4, PALETTE.resWallB));
@@ -178,7 +188,7 @@ function industrial(tier: number): THREE.Group {
     c.name = 'chimney';
     g.add(c);
     windows(g, 4.0, 2, 5, 0.7, 1.72, 0.9);
-    g.add(box(1.4, 1.1, 0.1, PALETTE.comTeal, -1.2, 0, 1.75));
+    g.add(box(1.4, 1.1, 0.16, PALETTE.comTeal, -1.2, 0, 1.7)); // entrance (straddles wall)
   }
   return g;
 }

@@ -174,16 +174,25 @@ export class Game {
   }
 
   private wireSdk(): void {
-    sdk.onPause(() => this.setPaused(true));
-    sdk.onResume(() => this.setPaused(false));
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.setPaused(true);
-      else if (!sdk.available) this.setPaused(false);
-    });
+    // Pause can be requested by the Playables SDK OR by the browser tab going
+    // hidden. Track them as independent reasons so they never fight: the game is
+    // paused while ANY reason is active and only resumes when ALL are cleared.
+    sdk.onPause(() => this.setPauseReason('sdk', true));
+    sdk.onResume(() => this.setPauseReason('sdk', false));
+    document.addEventListener('visibilitychange', () => this.setPauseReason('hidden', document.hidden));
     audio.init();
   }
 
+  private pauseReasons = new Set<string>();
+
+  private setPauseReason(reason: string, active: boolean): void {
+    if (active) this.pauseReasons.add(reason);
+    else this.pauseReasons.delete(reason);
+    this.setPaused(this.pauseReasons.size > 0);
+  }
+
   setPaused(p: boolean): void {
+    if (p === this.paused) return; // idempotent — avoid redundant save/audio churn
     this.paused = p;
     if (p) {
       audio.pause();
@@ -216,6 +225,7 @@ export class Game {
     this.state.completed = false;
     this.sim.graph.invalidateCache();
     this.sim.derived.deliveries.length = 0;
+    this.agents.clear();
     document.getElementById('end-screen')?.remove();
     document.querySelector('.modal-backdrop')?.remove();
     this.ui.select(null);

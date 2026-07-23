@@ -12,7 +12,7 @@ import { addCounter } from '../game/GameState';
 import type { SimContext } from './types';
 
 export function tickFire(ctx: SimContext): void {
-  const { state, derived, dt, time } = ctx;
+  const { state, derived, graph, dt, time } = ctx;
 
   const stations = Object.values(state.buildings).filter(
     (b) => b.defId === 'fire' && derived.runtime.get(b.id)!.active,
@@ -32,13 +32,19 @@ export function tickFire(ctx: SimContext): void {
     // ---- active fire
     if (b.onFire) {
       b.fireT += dt;
-      const responseTime = rt.covered ? 3 + ECONOMY.fireExtinguishSeconds : ECONOMY.fireBurnSeconds;
-      if (b.fireT >= responseTime) {
+      // A fire is fought if ANY active fire station can reach it by road — a
+      // truck is dispatched and the building is SAVED. Covered buildings get a
+      // faster response. Only a fire no crew can reach burns out into damage.
+      const canRespond = stations.some((st) => graph.connected(plotById(st.id).edge, plot.edge));
+      const responseTime = rt.covered ? 3 + ECONOMY.fireExtinguishSeconds : ECONOMY.fireBurnSeconds - 2;
+      const saved = canRespond && b.fireT >= responseTime;
+      const burnedOut = !canRespond && b.fireT >= ECONOMY.fireBurnSeconds;
+      if (saved || burnedOut) {
         b.onFire = false;
         b.fireT = 0;
         b.fireRisk = 0;
         b.warnedAt = -1;
-        if (!rt.covered) b.damaged = true; // uncontrolled burn → needs repair
+        if (burnedOut) b.damaged = true; // no crew could reach it → needs repair
         addCounter(state, 'firesResolved');
         bus.emit('fireResolved', b.id);
         bus.emit('buildingChanged', b.id);

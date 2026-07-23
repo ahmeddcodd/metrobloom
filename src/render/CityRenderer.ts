@@ -12,6 +12,32 @@ import type { GameStateData } from '../game/GameState';
 import type { Simulation } from '../sim/Simulation';
 import { buildModel, buildScaffold, geo, makeAoDisc, mat } from './ModelFactory';
 
+/** Uniform scale that fits a building's (rotated) footprint inside its plot with
+ *  a margin, so upgraded meshes never spill onto the road. Decorative trees are
+ *  excluded so they can overhang naturally. */
+function fitScaleToPlot(model: THREE.Object3D, plotW: number, plotD: number): number {
+  model.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  const tmp = new THREE.Box3();
+  let any = false;
+  model.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh && !(o as THREE.InstancedMesh).isInstancedMesh) return;
+    for (let cur: THREE.Object3D | null = o; cur; cur = cur.parent) {
+      if (cur.name === 'decor') return;
+    }
+    tmp.setFromObject(m);
+    if (tmp.isEmpty()) return;
+    box.union(tmp);
+    any = true;
+  });
+  if (!any) return 1;
+  const bw = box.max.x - box.min.x;
+  const bd = box.max.z - box.min.z;
+  const margin = 0.8;
+  return Math.min(1, Math.max(1, plotW - margin) / Math.max(0.01, bw), Math.max(1, plotD - margin) / Math.max(0.01, bd));
+}
+
 /** Every edge gets its own asphalt height so overlapping boxes at
  *  intersections can never z-fight (steps are sub-pixel at game zoom). */
 function roadTopY(edgeId: string): number {
@@ -436,6 +462,11 @@ export class CityRenderer {
       model.userData.plotId = plotId;
       model.name = 'building';
       g.add(model);
+      // Fit the building's footprint inside its plot so a bigger upgraded mesh
+      // never spills onto the road — it grows in place within its own plot.
+      const fit = fitScaleToPlot(model, p.w, p.d);
+      model.userData.fit = fit;
+      model.scale.set(fit, fit, fit);
       this.buildingGroups.set(plotId, g);
       model.traverse((o) => (o.userData.plotId = plotId));
       this.pickables.push(model);
@@ -445,7 +476,7 @@ export class CityRenderer {
         const scaffold = buildScaffold(size, 2.4, size);
         scaffold.name = 'scaffold';
         g.add(scaffold);
-        model.scale.y = 0.05;
+        model.scale.y = fit * 0.05;
       }
       if (b.damaged) {
         // boarded-up look: dark planks + faded dust plane
@@ -546,13 +577,14 @@ export class CityRenderer {
       if (!b) continue;
       const model = g.getObjectByName('building');
       const scaffold = g.getObjectByName('scaffold');
+      const fit = (model?.userData.fit as number) ?? 1;
       if (b.construction && model) {
         const progress = 1 - b.construction.remaining / b.construction.total;
-        model.scale.y = clamp(0.05 + progress, 0.05, 1);
+        model.scale.y = fit * clamp(0.05 + progress, 0.05, 1);
         const crane = scaffold?.getObjectByName('crane');
         if (crane) crane.rotation.y = Math.sin(this.t * 0.8) * 0.7;
-      } else if (model && model.scale.y < 1) {
-        model.scale.y = 1;
+      } else if (model && model.scale.y < fit - 0.001) {
+        model.scale.y = fit;
       }
       // landmark ring + rotor + beacon idle animations
       const ring = model?.getObjectByName('ring');
