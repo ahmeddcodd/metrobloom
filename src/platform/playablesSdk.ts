@@ -133,11 +133,17 @@ class PlayablesSdk {
     }
   }
 
-  /** Submit the player's score (must be a non-negative integer). */
+  private lastScore = -1;
+
+  /** Submit the player's score (coerced to a non-negative integer). Deduped on
+   *  the actually-sent value so repeats are skipped but the first real send
+   *  always goes through. */
   sendScore(value: number): void {
     if (!this.available) return;
+    const v = Math.max(0, Math.round(value)) | 0; // force a clean integer
+    if (v === this.lastScore) return;
+    this.lastScore = v;
     try {
-      const v = Math.max(0, Math.round(value)) | 0; // force a clean integer
       window.ytgame?.engagement?.sendScore?.({ value: v });
     } catch {
       /* never crash on SDK errors */

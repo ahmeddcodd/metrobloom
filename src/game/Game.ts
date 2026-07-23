@@ -63,6 +63,7 @@ export class Game {
       onReset: () => this.resetGame(),
       flyTo: (x, z, zoom) => this.camera.flyTo(x, z, zoom),
       saveNow: () => this.requestSave(),
+      submitScore: () => this.submitScore(),
     });
 
     this.renderer.onQualityChange = (q) => {
@@ -150,6 +151,7 @@ export class Game {
     bus.on('levelCompleted', () => {
       audio.play('celebrate');
       this.requestSave();
+      this.submitScore();
     });
     bus.on('levelStarted', (lv) => {
       // gentle camera nudge toward the level's first spatial objective
@@ -205,6 +207,16 @@ export class Game {
 
   private requestSave(): void {
     saveSystem.requestSave(() => serialize(this.state));
+  }
+
+  /** Submit the player's best score to YouTube as an integer. Called early (so
+   *  the platform always sees a score), on each level-up, and at the finale.
+   *  The submitted value always matches the saved best score; dedup lives in the
+   *  SDK wrapper. */
+  private submitScore(): void {
+    const total = this.ui.computeScores().total;
+    if (total > this.state.bestScore) this.state.bestScore = total;
+    sdk.sendScore(this.state.bestScore);
   }
 
   private resetGame(): void {
@@ -403,5 +415,9 @@ export class Game {
       this.renderer.recordFrame(dt * 1000);
     };
     requestAnimationFrame(frame);
+    // Submit an initial score once the game is interactable, so the platform
+    // (and the certification checker) always observes a valid integer score
+    // early — even before the player finishes a level.
+    window.setTimeout(() => this.submitScore(), 1800);
   }
 }

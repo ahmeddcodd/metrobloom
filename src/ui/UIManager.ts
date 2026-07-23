@@ -15,7 +15,6 @@ import type { Actions } from '../game/Actions';
 import type { GameStateData } from '../game/GameState';
 import type { Simulation } from '../sim/Simulation';
 import { audio } from '../platform/audioSystem';
-import { sdk } from '../platform/playablesSdk';
 import { bus } from '../utils/events';
 import { clamp, formatNum } from '../utils/math';
 import { CATEGORY_ICONS, ICONS, icon } from './icons';
@@ -26,6 +25,7 @@ export interface UICallbacks {
   onReset: () => void;
   flyTo: (x: number, z: number, zoom: number) => Promise<void>;
   saveNow: () => void;
+  submitScore: () => void;
 }
 
 const STATUS_TEXT: Record<string, string> = {
@@ -508,8 +508,7 @@ export class UIManager {
     const sc = this.computeScores();
     this.state.bestScore = Math.max(this.state.bestScore, sc.total);
     this.cb.saveNow();
-    // submit the final best score to YouTube (integer; matches the saved best)
-    sdk.sendScore(this.state.bestScore);
+    this.cb.submitScore(); // final best score → YouTube (centralised + deduped in Game)
     const medal = sc.total >= 85 ? '🥇' : sc.total >= 70 ? '🥈' : '🥉';
     const worst = [
       ['Prosperity', sc.prosperity, 'Upgrade shops and offices, and keep taxes collected.'],
