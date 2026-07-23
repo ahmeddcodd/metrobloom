@@ -55,11 +55,6 @@ export class Game {
     this.effects = new Effects(this.renderer.scene, this.state, this.sim);
 
     this.ui = new UIManager(uiRoot, this.state, this.sim, this.actions, this.camera.camera, {
-      onQualityChange: (q) => this.renderer.setQualityMode(q),
-      onReducedMotion: (on) => {
-        this.camera.reducedMotion = on;
-        this.effects.reducedMotion = on;
-      },
       onReset: () => this.resetGame(),
       flyTo: (x, z, zoom) => this.camera.flyTo(x, z, zoom),
       saveNow: () => this.requestSave(),
@@ -70,9 +65,13 @@ export class Game {
       this.lighting.applyQuality(q);
       this.agents.applyQuality(q);
     };
-    this.renderer.setQualityMode(this.state.settings.quality);
-    this.camera.reducedMotion = this.state.settings.reducedMotion;
-    this.effects.reducedMotion = this.state.settings.reducedMotion;
+    // Quality is always adaptive ("auto") — the best default for YouTube
+    // Playables across low- and high-end devices; not user-configurable.
+    this.renderer.setQualityMode('auto');
+    // Respect the OS "reduce motion" accessibility preference (no manual toggle).
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    this.camera.reducedMotion = reduceMotion;
+    this.effects.reducedMotion = reduceMotion;
     audio.setMusic(this.state.settings.music);
     audio.setSfx(this.state.settings.sfx);
 

@@ -1,6 +1,6 @@
 /**
  * Static world: textured grass, coastline cliff, animated shader water with
- * shore foam, beach, ambient trees, drifting clouds and sailboats.
+ * shore foam, beach, ambient trees and drifting clouds.
  * All textures are procedural canvases — zero downloads.
  */
 import * as THREE from 'three';
@@ -27,7 +27,6 @@ const hex = (n: number) => `#${n.toString(16).padStart(6, '0')}`;
 export class Terrain {
   readonly group = new THREE.Group();
   private waterMat: THREE.ShaderMaterial;
-  private boats: THREE.Group[] = [];
   private clouds: THREE.Sprite[] = [];
   private ocean!: THREE.Mesh;
   private t = 0;
@@ -176,19 +175,6 @@ export class Terrain {
       this.group.add(sp);
     }
 
-    // ---- ambient boats
-    for (let i = 0; i < 2; i++) {
-      const boat = new THREE.Group();
-      const hull = new THREE.Mesh(geo('rbox', 1.6, 0.4, 0.7, 0.1), mat(i ? PALETTE.carB : PALETTE.resRoofA));
-      hull.position.y = 0.1;
-      boat.add(hull);
-      const sail = new THREE.Mesh(geo('cone', 0.5, 1.1, 4), mat(PALETTE.officeWall));
-      sail.position.y = 0.9;
-      boat.add(sail);
-      boat.position.set(SEA_X - 6 - i * 7, -0.06, -6 + i * 16);
-      this.boats.push(boat);
-      this.group.add(boat);
-    }
 
     // ---- ambient trees (seeded, clear of plots and roads)
     let placed = 0;
@@ -213,12 +199,6 @@ export class Terrain {
     // keep the deep ocean under the view so its edge is never revealed
     this.ocean.position.x = camX;
     this.ocean.position.z = camZ;
-    for (let i = 0; i < this.boats.length; i++) {
-      const b = this.boats[i];
-      b.position.z += Math.sin(this.t * 0.2 + i * 2) * dt * 0.5;
-      b.position.y = -0.06 + Math.sin(this.t * 1.1 + i) * 0.05;
-      b.rotation.z = Math.sin(this.t * 0.9 + i) * 0.05;
-    }
     for (let i = 0; i < this.clouds.length; i++) {
       const c = this.clouds[i];
       c.position.x += dt * (0.25 + i * 0.06);

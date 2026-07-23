@@ -20,8 +20,6 @@ import { clamp, formatNum } from '../utils/math';
 import { CATEGORY_ICONS, ICONS, icon } from './icons';
 
 export interface UICallbacks {
-  onQualityChange: (q: 'auto' | 'low' | 'medium' | 'high') => void;
-  onReducedMotion: (on: boolean) => void;
   onReset: () => void;
   flyTo: (x: number, z: number, zoom: number) => Promise<void>;
   saveNow: () => void;
@@ -430,27 +428,11 @@ export class UIManager {
   private showSettings(): void {
     const s = this.state.settings;
     const m = this.modal(`
-      <h2>⚙️ Settings</h2>
-      <div class="row"><span>Graphics quality</span>
-        <select id="set-quality">
-          ${['auto', 'low', 'medium', 'high'].map((q) => `<option value="${q}" ${s.quality === q ? 'selected' : ''}>${q}</option>`).join('')}
-        </select></div>
-      <div class="row"><span>Reduced motion</span><input id="set-motion" type="checkbox" ${s.reducedMotion ? 'checked' : ''}></div>
-      <div class="row"><span>Music</span><input id="set-music" type="checkbox" ${s.music ? 'checked' : ''}></div>
-      <div class="row"><span>Sound effects</span><input id="set-sfx" type="checkbox" ${s.sfx ? 'checked' : ''}></div>
+      <h2>${icon('gear', 'ico-s')} Settings</h2>
+      <div class="row"><span>${icon('music', 'ico-s')} Music</span><input id="set-music" type="checkbox" ${s.music ? 'checked' : ''}></div>
+      <div class="row"><span>${icon('sound', 'ico-s')} Sound effects</span><input id="set-sfx" type="checkbox" ${s.sfx ? 'checked' : ''}></div>
       <div class="btn-row"><button class="btn red" id="set-reset">Reset save</button><button class="btn" id="set-close">Done</button></div>
     `);
-    m.querySelector('#set-quality')!.addEventListener('change', (e) => {
-      const q = (e.target as HTMLSelectElement).value as 'auto' | 'low' | 'medium' | 'high';
-      this.state.settings.quality = q;
-      this.cb.onQualityChange(q);
-      this.cb.saveNow();
-    });
-    m.querySelector('#set-motion')!.addEventListener('change', (e) => {
-      this.state.settings.reducedMotion = (e.target as HTMLInputElement).checked;
-      this.cb.onReducedMotion(this.state.settings.reducedMotion);
-      this.cb.saveNow();
-    });
     m.querySelector('#set-music')!.addEventListener('change', (e) => {
       this.state.settings.music = (e.target as HTMLInputElement).checked;
       audio.setMusic(this.state.settings.music);

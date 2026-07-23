@@ -49,8 +49,25 @@ export const ICONS = {
      <rect x="7.5" y="17" width="9" height="3" rx="1" fill="#b07a1e"/>`,
   ),
   gear: svg(
-    `<path d="M12 2.8l1.2 2.5 2.7-.6 .5 2.7 2.7.5-.6 2.7 2.5 1.2-1.7 2.2 1.7 2.2-2.5 1.2.6 2.7-2.7.5-.5 2.7-2.7-.6L12 25l-1.2-2.5-2.7.6-.5-2.7-2.7-.5.6-2.7L3 15.2 4.7 13 3 10.8l2.5-1.2-.6-2.7 2.7-.5.5-2.7 2.7.6z" fill="#cfd8ea" transform="scale(0.86) translate(2,0)"/>
-     <circle cx="12" cy="12" r="3.6" fill="#4a5568"/>`,
+    `<g fill="#cfd8ea">
+       <circle cx="12" cy="12" r="6.6"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8" transform="rotate(45 12 12)"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8" transform="rotate(90 12 12)"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8" transform="rotate(135 12 12)"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8" transform="rotate(180 12 12)"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8" transform="rotate(225 12 12)"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8" transform="rotate(270 12 12)"/>
+       <rect x="10.8" y="1.6" width="2.4" height="4.2" rx="0.8" transform="rotate(315 12 12)"/>
+     </g>
+     <circle cx="12" cy="12" r="2.8" fill="#3a4457"/>`,
+  ),
+  music: svg(
+    `<path d="M9 16.5a2.5 2.5 0 1 1-1.6-2.33V5.2l8-1.8v8.9a2.5 2.5 0 1 1-1.6-2.33V6.1L9 7.5v9z" fill="#9fd0ff"/>`,
+  ),
+  sound: svg(
+    `<path d="M4 9.5v5h3.4L12 18.5v-13L7.4 9.5H4z" fill="#9fd0ff"/>
+     <path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" stroke="#9fd0ff" stroke-width="1.7" fill="none" stroke-linecap="round"/>`,
   ),
   build: svg(
     `<path d="M3 20h18v-2H3zM5 18V9l7-5 7 5v9h-4v-6h-6v6z" fill="#9fd0ff"/>
